@@ -1,0 +1,20 @@
+--- doc/org.eclipse.emf.doc/build.properties.bak	2012-03-29 09:25:16.000000000 +0200
++++ doc/org.eclipse.emf.doc/build.properties	2012-04-16 09:41:01.884130200 +0200
+@@ -25,4 +25,5 @@
+                modeling32.png,\
+                plugin.properties,\
+                plugin.xml,\
+-               toc.xml
++               toc.xml, \
++               index/
+--- doc/org.eclipse.emf.doc/customBuildCallbacks.xml.bak	2012-03-29 09:25:16.000000000 +0200
++++ doc/org.eclipse.emf.doc/customBuildCallbacks.xml	2012-04-16 14:33:51.571719004 +0200
+@@ -26,7 +26,7 @@
+ 	<!-- ===================================================================== -->
+ 	<target name="post.build.jars">
+ 		<!-- TODO: tweak buildDoc.xml as required (copied from ve.doc plugin) -->
+-		<!-- <ant antfile="buildDoc.xml" /> -->
++		<ant antfile="buildDoc.xml" /> 
+ 	</target>
+ 	
+ 	<!-- ===================================================================== -->
