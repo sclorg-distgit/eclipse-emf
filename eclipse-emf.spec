@@ -13,7 +13,7 @@
 
 Name:      %{?scl_prefix}eclipse-emf
 Version:   2.11.0
-Release:   4.2.bs2%{?dist}
+Release:   4.2%{?dist}
 Summary:   Eclipse Modeling Framework (EMF) Eclipse plug-in
 
 License:   EPL
