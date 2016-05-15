@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <packaging>pom</packaging>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho.extras</groupId>
+        <artifactId>tycho-source-feature-plugin</artifactId>
+        <version>0.23.0</version>
+        <executions>
+          <execution>
+            <id>source-feature</id>
+            <goals>
+              <goal>source-feature</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <excludes>
+            <plugin id="org.eclipse.emf"/>
+            <plugin id="org.eclipse.emf.activities"/>
+            <plugin id="org.eclipse.emf.doc"/>
+            <plugin id="org.eclipse.emf.example.installer"/>
+            <plugin id="org.eclipse.emf.examples"/>
+            <plugin id="org.eclipse.emf.mapping.ecore"/>
+            <plugin id="org.eclipse.emf.mapping.ecore.editor"/>
+            <plugin id="org.eclipse.emf.tests"/>
+            <feature id="org.eclipse.emf"/>
+            <feature id="org.eclipse.emf.common"/>
+            <feature id="org.eclipse.emf.common.ui"/>
+            <feature id="org.eclipse.emf.doc"/>
+            <feature id="org.eclipse.emf.ecore"/>
+            <feature id="org.eclipse.emf.edit"/>
+            <feature id="org.eclipse.emf.edit.ui"/>
+            <feature id="org.eclipse.emf.ecore.edit"/>
+            <feature id="org.eclipse.emf.ecore.editor"/>
+            <feature id="org.eclipse.emf.codegen"/>
+            <feature id="org.eclipse.emf.codegen.ui"/>
+            <feature id="org.eclipse.emf.codegen.ecore"/>
+            <feature id="org.eclipse.emf.codegen.ecore.ui"/>
+            <feature id="org.eclipse.emf.converter"/>
+            <feature id="org.eclipse.emf.databinding"/>
+            <feature id="org.eclipse.emf.databinding.edit"/>
+            <feature id="org.eclipse.emf.mapping"/>
+            <feature id="org.eclipse.emf.mapping.ecore"/>
+            <feature id="org.eclipse.emf.mapping.ui"/>
+            <feature id="org.eclipse.emf.mapping.ecore.editor"/>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-source-plugin</artifactId>
+        <version>0.23.0</version>
+        <executions>
+          <execution>
+            <id>plugin-source</id>
+            <goals>
+              <goal>plugin-source</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

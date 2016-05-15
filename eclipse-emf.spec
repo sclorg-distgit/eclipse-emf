@@ -2,32 +2,42 @@
 %{!?scl:%global pkg_name %{name}}
 %{?java_common_find_provides_and_requires}
 
+%global baserelease 1
+
 # The core sub-package must be archful because it is required to be in
 # libdir by the platform, but we have no natives, so suppress debuginfo
 %global debug_package %{nil}
 
-%global eclipse_dropin %{_datadir}/eclipse/dropins
+%global git_tag R2_11_maintenance
 
-# 2.11.0 was released but not tagged in yet in git
-%global git_tag 01f4d4dcaf49f62a70bc8272852638adb1dbc206
+%if 0%{?fedora} >= 24
+%global droplets droplets
+%else
+%global droplets dropins
+%endif
 
 Name:      %{?scl_prefix}eclipse-emf
-Version:   2.11.0
-Release:   4.2%{?dist}
+Version:   2.11.2
+Release:   1.%{baserelease}%{?dist}
 Summary:   Eclipse Modeling Framework (EMF) Eclipse plug-in
 
 License:   EPL
 URL:       http://www.eclipse.org/modeling/emf/
 Source0:   http://git.eclipse.org/c/emf/org.eclipse.emf.git/snapshot/org.eclipse.emf-%{git_tag}.tar.xz
+# This is a template used by tycho for generating parent pom
+Source1:   parent-pom.xml
 
 # look inside correct directory for platform docs
 Patch0:    eclipse-emf-platform-docs-location.patch
-# Build docs correctly
-Patch1:    eclipse-emf-build-docs.patch
-Patch2:    eclipse-emf-fix-missing-index.patch
+# Include documentation search index, exclude non-existing files
+Patch1:    fix-build-properties.patch
+# Fix test dependency on missing RAP bundles
+Patch2:    remove-rap-dependency.patch
 
-
-BuildRequires: %{?scl_prefix}eclipse-pde >= 1:4.4.0
+BuildRequires: %{?scl_prefix}tycho >= 0.23.0
+BuildRequires: %{?scl_prefix}tycho-extras >= 0.23.0
+BuildRequires: %{?scl_prefix}eclipse-filesystem
+BuildRequires: %{?scl_prefix}eclipse-pde
 
 %description
 The Eclipse Modeling Framework (EMF) allows developers to build tools and
@@ -37,12 +47,9 @@ produce a set of Java classes for the model, along with a set of adapter
 classes that enable viewing and command-based editing of the model, and a
 basic editor.
 
-# TODO: ODA, GWT and RAP components are not packaged.
-
 %package   core
 Epoch:     1
 Summary:   Eclipse EMF Core
-
 Requires:  %{?scl_prefix}eclipse-filesystem
 
 %description core
@@ -50,7 +57,6 @@ EMF bundles required by eclipse-platform.
 
 %package   runtime
 Summary:   Eclipse Modeling Framework (EMF) Eclipse plug-in
-Requires:  %{?scl_prefix}eclipse-platform >= 1:4.4.0
 
 # Obsoletes/provides added in F22
 Obsoletes: %{name} < %{version}-%{release}
@@ -68,8 +74,6 @@ basic editor.
 
 %package   sdk
 Summary:   Eclipse EMF SDK
-Requires:  %{?scl_prefix}eclipse-pde >= 1:4.4.0
-Requires:  %{name}-runtime = %{version}-%{release}
 
 BuildArch: noarch
 
@@ -89,6 +93,7 @@ how to use the Eclipse Modeling Framework (EMF) plug-ins.
 
 %prep
 %{?scl:scl enable %{scl_maven} %{scl} - << "EOF"}
+set -e -x
 %setup -q -n org.eclipse.emf-%{git_tag}
 
 find . -type f -name "*.jar" -exec rm {} \;
@@ -98,74 +103,108 @@ find . -type f -name "*.class" -exec rm {} \;
 %patch1
 %patch2
 
-mv {features,plugins,doc,examples}/* .
-rm -rf features plugins doc examples
-
 # Fix spurious exec perms on license
-chmod 0644 org.eclipse.emf.license-feature/rootfiles/epl-v10.html
+chmod 0644 features/org.eclipse.emf.license-feature/rootfiles/epl-v10.html
+
+# TODO: ODA, GWT, Xtext and RAP components are not packaged.
+find -maxdepth 2 -type d -name "*.xcore*" -exec rm -r {} \;
+find -maxdepth 2 -type d -name "*.xtext*" -exec rm -r {} \;
+find -maxdepth 2 -type d -name "*.oda*" -exec rm -r {} \;
+find -maxdepth 2 -type d -name "*.rap*" -exec rm -r {} \;
+find -maxdepth 2 -type d -name "*.gwt*" -exec rm -r {} \;
+
+# Insert pom templates
+mkdir pom-templates
+cp -p %{SOURCE1} pom-templates/.
+
+# Disable tests due to no eclipse-xsd for
+rm -rf tests/
+
+# Generate pom.xml
+mv doc/org.eclipse.emf.examples.jet.article2 examples
+xmvn -o org.eclipse.tycho:tycho-pomgenerator-plugin:generate-poms -DgroupId=org.eclipse.emf
+find features -name pom.xml -exec sed -i -e 's/^  <groupId>\(.*\)</  <groupId>\1.features</' {} \;
+find examples -name pom.xml -exec sed -i -e 's/^  <groupId>\(.*\)</  <groupId>\1.examples</' {} \;
+find doc -name pom.xml -exec sed -i -e 's/^  <groupId>\(.*\)</  <groupId>\1.doc</' {} \;
+%pom_add_plugin "org.eclipse.tycho.extras:tycho-eclipserun-plugin:0.23.0" doc/org.eclipse.emf.doc \
+  "<executions><execution><goals><goal>eclipse-run</goal></goals><phase>process-sources</phase></execution></executions><configuration><appArgLine>-consolelog -debug -application org.eclipse.ant.core.antRunner -quiet -buildfile buildDoc.xml</appArgLine><repositories><repository><id>luna</id><layout>p2</layout><url>http://download.eclipse.org/releases/luna</url></repository></repositories><dependencies><dependency><artifactId>org.eclipse.ant.core</artifactId><type>eclipse-plugin</type></dependency><dependency><artifactId>org.apache.ant</artifactId><type>eclipse-plugin</type></dependency><dependency><artifactId>org.eclipse.help.base</artifactId><type>eclipse-plugin</type></dependency></dependencies></configuration>"
+
+# Remove broken refs to source bundles
+%pom_xpath_remove "includes[@id='org.eclipse.emf.source']" features/org.eclipse.emf.sdk-feature/feature.xml
+%pom_xpath_remove "includes[@id='org.eclipse.emf.doc.source']" features/org.eclipse.emf.sdk-feature/feature.xml
+%pom_xpath_remove "includes[@id='org.eclipse.emf.examples.source']" examples/org.eclipse.emf.examples-feature/feature.xml
+
+# Disable modules unneeded for tycho build
+%pom_disable_module 'features/org.eclipse.emf.all-feature'
+%pom_disable_module 'releng/org.eclipse.emf.build-feature'
+%pom_disable_module 'releng/org.eclipse.emf.base.build-feature'
+
+%mvn_package "::pom::" __noinstall
+%mvn_package "::jar:{sources,sources-feature}:" sdk
+%mvn_package ":org.eclipse.emf.{sdk,example.installer}" sdk
+%mvn_package "org.eclipse.emf.doc:" sdk
+%mvn_package "org.eclipse.emf.features:org.eclipse.emf.{base,common,ecore}" core
+%mvn_package "org.eclipse.emf:org.eclipse.emf.{common,ecore,ecore.change,ecore.xmi}" core
+%mvn_package "org.eclipse.emf.tests:" tests
+%mvn_package "org.eclipse.emf.examples:" examples
+%mvn_package ":" runtime
 %{?scl:EOF}
 
 
 %build
 %{?scl:scl enable %{scl_maven} %{scl} - << "EOF"}
-# Note: We use forceContextQualifier because the docs plugins use custom build
-#       scripts and don't work otherwise.
-OPTIONS="-DjavacTarget=1.5 -DjavacSource=1.5 -DforceContextQualifier=$(date +v%Y%m%d-%H00)"
-
-# Work around pdebuild entering/leaving symlink it is unaware of.
-ln -s %{_builddir}/org.eclipse.emf-%{git_tag}/org.eclipse.emf.license-feature \
-  %{_builddir}/org.eclipse.emf-%{git_tag}/org.eclipse.emf.license
-
-# Build core & runtime features, docs & source features, example features
-eclipse-pdebuild -f org.eclipse.emf -a "$OPTIONS"
-eclipse-pdebuild -f org.eclipse.emf.sdk -a "$OPTIONS"
-eclipse-pdebuild -f org.eclipse.emf.examples -a "$OPTIONS"
+set -e -x
+%mvn_build -f -j -- -DforceContextQualifier=$(date -u +v%Y%m%d-1000)
 %{?scl:EOF}
 
 
 %install
 %{?scl:scl enable %{scl_maven} %{scl} - << "EOF"}
-install -d -m 755 %{buildroot}%{eclipse_dropin}
-unzip -q -n -d %{buildroot}%{eclipse_dropin}/emf-runtime  build/rpmBuild/org.eclipse.emf.zip
-unzip -q -n -d %{buildroot}%{eclipse_dropin}/emf-sdk      build/rpmBuild/org.eclipse.emf.sdk.zip
-unzip -q -n -d %{buildroot}%{eclipse_dropin}/emf-examples build/rpmBuild/org.eclipse.emf.examples.zip
+set -e -x
+%mvn_install
 
-# The main features are a subset of the sdk feature, so delete duplicates from the sdk feature
-(cd %{buildroot}%{eclipse_dropin}/emf-sdk/eclipse/features && ls %{buildroot}%{eclipse_dropin}/emf-runtime/eclipse/features | xargs rm -rf)
-(cd %{buildroot}%{eclipse_dropin}/emf-sdk/eclipse/plugins  && ls %{buildroot}%{eclipse_dropin}/emf-runtime/eclipse/plugins  | xargs rm -rf)
+# Move to libdir due to being part of core platform
+install -d -m 755 %{buildroot}%{_libdir}/eclipse
+mv %{buildroot}%{_datadir}/eclipse/%{droplets}/emf-core/eclipse/{plugins,features} %{buildroot}%{_libdir}/eclipse
+rm -r %{buildroot}%{_datadir}/eclipse/%{droplets}/emf-core
 
-# Move core features to libdir
-install -d -m 755 %{buildroot}%{_libdir}/eclipse/{features,plugins}
-mv %{buildroot}%{eclipse_dropin}/emf-runtime/eclipse/features/org.eclipse.emf.common_* %{buildroot}%{_libdir}/eclipse/features
-mv %{buildroot}%{eclipse_dropin}/emf-runtime/eclipse/plugins/org.eclipse.emf.common_* %{buildroot}%{_libdir}/eclipse/plugins
-mv %{buildroot}%{eclipse_dropin}/emf-runtime/eclipse/features/org.eclipse.emf.ecore_* %{buildroot}%{_libdir}/eclipse/features
-mv %{buildroot}%{eclipse_dropin}/emf-runtime/eclipse/plugins/org.eclipse.emf.ecore_* %{buildroot}%{_libdir}/eclipse/plugins
-mv %{buildroot}%{eclipse_dropin}/emf-runtime/eclipse/plugins/org.eclipse.emf.ecore.change_* %{buildroot}%{_libdir}/eclipse/plugins
-mv %{buildroot}%{eclipse_dropin}/emf-runtime/eclipse/plugins/org.eclipse.emf.ecore.xmi_* %{buildroot}%{_libdir}/eclipse/plugins
+# Fixup metadata
+sed -i -e 's|%{_datadir}/eclipse/%{droplets}/emf-core/eclipse|%{_libdir}/eclipse|' %{buildroot}%{_datadir}/maven-metadata/eclipse-emf-core.xml
+sed -i -e 's|%{_datadir}/eclipse/%{droplets}/emf-core/eclipse/features/|%{_libdir}/eclipse/features/|' \
+       -e 's|%{_datadir}/eclipse/%{droplets}/emf-core/eclipse/plugins/|%{_libdir}/eclipse/plugins/|' .mfiles-core
+sed -i -e '/%{droplets}/d' .mfiles-core
 %{?scl:EOF}
 
 
-%files core
-%{_libdir}/eclipse/features/*
-%{_libdir}/eclipse/plugins/*
-%doc org.eclipse.emf.license-feature/rootfiles/*
+%files core -f .mfiles-core
 
-%files runtime
-%{eclipse_dropin}/emf-runtime
-%doc org.eclipse.emf.license-feature/rootfiles/*
+%files runtime -f .mfiles-runtime
 
-%files sdk
-%{eclipse_dropin}/emf-sdk
+%files sdk -f .mfiles-sdk
 
-%files examples
-%{eclipse_dropin}/emf-examples
+%files examples -f .mfiles-examples
 
 %changelog
-* Wed Jul 29 2015 Mat Booth <mat.booth@redhat.com> - 2.11.0-4.2
-- Fix failure to build from source
-
-* Mon Jun 29 2015 Mat Booth <mat.booth@redhat.com> - 2.11.0-4.1
+* Sat Mar 19 2016 Mat Booth <mat.booth@redhat.com> - 2.11.2-1.1
 - Import latest from Fedora
+
+* Mon Feb 29 2016 Mat Booth <mat.booth@redhat.com> - 2.11.1-1.2
+- Rebuild 2016-02-29
+
+* Sat Feb 27 2016 Mat Booth <mat.booth@redhat.com> - 2.11.2-1
+- Update to Mars.2 release
+
+* Wed Feb 03 2016 Fedora Release Engineering <releng@fedoraproject.org> - 2.11.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+* Tue Jan 12 2016 Mat Booth <mat.booth@redhat.com> - 2.11.1-1.1
+- Import latest from Fedora
+- Remove tests package due to no eclipse-xsd in DTS
+
+* Mon Sep 28 2015 Mat Booth <mat.booth@redhat.com> - 2.11.1-1
+- Update to Mars.1 release
+- Build with maven/tycho
+- Add tests package
 
 * Mon Jun 29 2015 Mat Booth <mat.booth@redhat.com> - 2.11.0-4
 - Remove incomplete SCL macros

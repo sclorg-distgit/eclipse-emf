@@ -1,0 +1,67 @@
+--- doc/org.eclipse.emf.doc/build.properties.bak	2012-03-29 09:25:16.000000000 +0200
++++ doc/org.eclipse.emf.doc/build.properties	2012-04-16 09:41:01.884130200 +0200
+@@ -25,4 +25,5 @@
+                modeling32.png,\
+                plugin.properties,\
+                plugin.xml,\
+-               toc.xml
++               toc.xml, \
++               index/
+--- doc/org.eclipse.emf.cheatsheets/build.properties.orig	2015-09-29 11:32:16.116244064 +0100
++++ doc/org.eclipse.emf.cheatsheets/build.properties	2015-09-29 11:32:25.431081492 +0100
+@@ -3,8 +3,7 @@
+                plugin.properties,\
+                plugin.xml,\
+                META-INF/,\
+-               cheatsheets/,\
+-               archive*/
++               cheatsheets/
+ src.includes = about.html
+ output.. = bin/
+ exclude.. = **/doc-files/**
+--- features/org.eclipse.emf.license-feature/build.properties.orig	2015-09-29 12:14:58.987195588 +0100
++++ features/org.eclipse.emf.license-feature/build.properties	2015-09-29 12:15:28.722697864 +0100
+@@ -1,5 +1,6 @@
+ bin.includes = feature.xml,\
+                feature.properties,\
++               build.properties,\
+                epl-v10.html,\
+                license.html
+ src.includes = epl-v10.html,\
+--- doc/org.eclipse.emf.doc-feature/build.properties.orig	2015-09-29 12:11:00.782182794 +0100
++++ doc/org.eclipse.emf.doc-feature/build.properties	2015-09-29 12:11:06.386088983 +0100
+@@ -1,3 +1,2 @@
+ bin.includes = feature.xml,\
+-               feature.properties,\
+-               eclipse_update_120.jpg
++               feature.properties
+--- features/org.eclipse.emf-feature/build.properties.orig	2015-09-29 13:27:38.798516331 +0100
++++ features/org.eclipse.emf-feature/build.properties	2015-09-29 13:27:45.544400091 +0100
+@@ -1,3 +1,2 @@
+ bin.includes = feature.xml,\
+-               feature.properties,\
+-               eclipse_update_120.jpg
++               feature.properties
+--- examples/org.eclipse.emf.examples-feature/build.properties.orig	2015-09-29 13:27:08.820032981 +0100
++++ examples/org.eclipse.emf.examples-feature/build.properties	2015-09-29 13:27:30.060666926 +0100
+@@ -1,4 +1,3 @@
+ bin.includes = feature.xml,\
+-               feature.properties,\
+-               eclipse_update_120.jpg
++               feature.properties
+ generate.feature@org.eclipse.emf.examples.source=org.eclipse.emf.examples, exclude@org.eclipse.emf.activities
+--- tests/org.eclipse.emf.tests-feature/build.properties.orig	2015-09-29 13:29:05.006030686 +0100
++++ tests/org.eclipse.emf.tests-feature/build.properties	2015-09-29 13:29:11.606916931 +0100
+@@ -1,3 +1,2 @@
+ bin.includes = feature.xml,\
+-               feature.properties,\
+-               eclipse_update_120.jpg
++               feature.properties
+--- features/org.eclipse.emf.sdk-feature/build.properties.orig	2015-09-29 14:14:21.496216023 +0100
++++ features/org.eclipse.emf.sdk-feature/build.properties	2015-09-29 14:14:29.006086601 +0100
+@@ -1,4 +1,3 @@
+ bin.includes = feature.xml,\
+-               feature.properties,\
+-               eclipse_update_120.jpg
++               feature.properties
+ generate.feature@org.eclipse.emf.source=org.eclipse.emf.sdk, exclude@org.eclipse.emf.doc, exclude@org.eclipse.emf.example.installer, exclude@org.eclipse.emf.mapping.ecore, exclude@org.eclipse.emf.mapping.ecore.editor

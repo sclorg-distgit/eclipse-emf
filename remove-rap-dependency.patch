@@ -1,0 +1,12 @@
+--- tests/org.eclipse.emf.test.edit/META-INF/MANIFEST.MF.orig	2015-09-29 11:26:38.307139818 +0100
++++ tests/org.eclipse.emf.test.edit/META-INF/MANIFEST.MF	2015-09-29 11:26:49.553943534 +0100
+@@ -16,8 +16,7 @@
+  org.eclipse.emf.edit,
+  org.junit;bundle-version="[4.11.0,5.0.0)",
+  org.eclipse.emf.test.common,
+- org.eclipse.ui;resolution:=optional,
+- org.eclipse.rap.ui;resolution:=optional
++ org.eclipse.ui
+ Eclipse-LazyStart: true
+ Bundle-ActivationPolicy: lazy
+ Import-Package: org.eclipse.emf.common.ui,
