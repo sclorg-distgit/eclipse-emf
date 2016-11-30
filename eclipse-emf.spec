@@ -2,7 +2,7 @@
 %{!?scl:%global pkg_name %{name}}
 %{?java_common_find_provides_and_requires}
 
-%global baserelease 2
+%global baserelease 3
 
 # The core sub-package must be archful because it is required to be in
 # libdir by the platform, but we have no natives, so suppress debuginfo
@@ -12,7 +12,8 @@
 
 %global droplets droplets
 
-%global bootstrap 1
+%global bootstrap 0
+%global no_tests 1
 
 Name:      %{?scl_prefix}eclipse-emf
 Version:   2.12.0
@@ -37,7 +38,9 @@ BuildRequires: %{?scl_prefix}tycho-extras >= 0.23.0
 BuildRequires: %{?scl_prefix}eclipse-filesystem
 %if ! %{bootstrap}
 BuildRequires: %{?scl_prefix}eclipse-pde
+%if ! %{no_tests}
 BuildRequires: %{?scl_prefix}eclipse-xsd
+%endif
 %endif
 
 %description
@@ -74,6 +77,7 @@ classes that enable viewing and command-based editing of the model, and a
 basic editor.
 
 %if ! %{bootstrap}
+%if ! %{no_tests}
 %package   tests
 Summary:   Eclipse EMF Tests
 
@@ -81,6 +85,7 @@ BuildArch: noarch
 
 %description tests
 Tests for the Eclipse Modeling Framework (EMF) plug-in.
+%endif
 
 %package   sdk
 Summary:   Eclipse EMF SDK
@@ -129,6 +134,9 @@ mkdir pom-templates
 cp -p %{SOURCE1} pom-templates/.
 
 # Generate pom.xml
+%if %{no_tests}
+rm -rf tests/*
+%endif
 mv doc/org.eclipse.emf.examples.jet.article2 examples
 xmvn -o org.eclipse.tycho:tycho-pomgenerator-plugin:generate-poms -DgroupId=org.eclipse.emf
 find features -name pom.xml -exec sed -i -e 's/^  <groupId>\(.*\)</  <groupId>\1.features</' {} \;
@@ -210,7 +218,9 @@ done
 %files runtime -f .mfiles-runtime
 
 %if ! %{bootstrap}
+%if ! %{no_tests}
 %files tests -f .mfiles-tests
+%endif
 
 %files sdk -f .mfiles-sdk
 
@@ -218,6 +228,9 @@ done
 %endif
 
 %changelog
+* Thu Jul 28 2016 Mat Booth <mat.booth@redhat.com> - 2.12.0-1.3
+- Allow building without tests
+
 * Wed Jul 27 2016 Mat Booth <mat.booth@redhat.com> - 2.12.0-1.2
 - Always use droplets
 - Avoid unnecessary symlinks before Eclipse is bootstrapped
