@@ -2,7 +2,7 @@
 %{!?scl:%global pkg_name %{name}}
 %{?java_common_find_provides_and_requires}
 
-%global baserelease 3
+%global baserelease 4
 
 # The core sub-package must be archful because it is required to be in
 # libdir by the platform, but we have no natives, so suppress debuginfo
@@ -13,7 +13,7 @@
 %global droplets droplets
 
 %global bootstrap 0
-%global no_tests 1
+%global no_tests 0
 
 Name:      %{?scl_prefix}eclipse-emf
 Version:   2.12.0
@@ -228,6 +228,9 @@ done
 %endif
 
 %changelog
+* Thu Jul 28 2016 Mat Booth <mat.booth@redhat.com> - 2.12.0-1.4
+- Enable building tests
+
 * Thu Jul 28 2016 Mat Booth <mat.booth@redhat.com> - 2.12.0-1.3
 - Allow building without tests
 
